@@ -1,0 +1,133 @@
+defaults:
+
+  # Train Script
+  logdir: /dev/null
+  seed: 0
+  gpu: 0
+  task: iglu_C32
+  env_params: ''
+  num_envs: 1
+  steps: 4e6
+  eval_every: 1e5
+  eval_eps: 1
+  action_repeat: 1
+  time_limit: 0
+  prefill: 30000
+  image_size: [64, 64]
+  grayscale: False
+  asymmetric_reward: True
+  img_channels: 3
+  replay_size: 2e6
+  dataset: {batch: 50, length: 50, oversample_ends: True}
+  replay: {rescan: 5000, cache: 100}
+  precision: 16
+  jit: True
+
+  # Agent
+  log_every: 1e3
+  train_every: 5
+  train_steps: 1
+  pretrain: 10000
+  clip_rewards: identity
+  expl_noise: 0.0
+  expl_behavior: greedy
+  expl_until: 0
+  eval_noise: 0.0
+  eval_state_mean: False
+
+  # World Model
+  pred_discount: True
+  disable_decoder: False
+  encode_grid: True
+  grad_heads: [image, reward, discount]
+  rssm: {hidden: 400, deter: 400, stoch: 32, discrete: 32, act: elu, std_act: sigmoid2, min_std: 0.1}
+  encoder: {depth: 48, act: elu, kernels: [4, 4, 4, 4], keys: [image]}
+  decoder: {depth: 48, act: elu, kernels: [5, 5, 6, 6]}
+  reward_head: {layers: 4, units: 400, act: elu, dist: mse}
+  # state components prediction
+  grid_head: {layers: 4, units: 400, act: elu, dist: categorical, shape: [1089, 7]}
+  pos_head: {layers: 4, units: 400, act: elu, dist: mse, shape: [5]}
+  vec_encoder: {layers: 4, units: 200, act: elu, shape: 200} # for inventory + compass
+  discount_head: {layers: 4, units: 400, act: elu, dist: binary}
+  loss_scales: {kl: 1.0, reward: 1.0, discount: 1.0}
+  kl: {free: 0.0, forward: False, balance: 0.8, free_avg: True}
+  model_opt: {opt: adam, lr: 3e-4, eps: 1e-5, clip: 100, wd: 1e-6}
+
+  # Actor Critic
+  actor: {layers: 4, units: 400, act: elu, dist: trunc_normal, min_std: 0.1}
+  critic: {layers: 4, units: 400, act: elu, dist: mse}
+  actor_opt: {opt: adam, lr: 1e-4, eps: 1e-5, clip: 100, wd: 1e-6}
+  critic_opt: {opt: adam, lr: 1e-4, eps: 1e-5, clip: 100, wd: 1e-6}
+  discount: 0.99
+  discount_lambda: 0.95
+  imag_horizon: 15
+  actor_grad: reinforce
+  actor_grad_mix: '0.1'
+  actor_ent: '1e-4'
+  slow_target: True
+  slow_target_update: 100
+  slow_target_fraction: 1
+
+  # Exploration
+  expl_extr_scale: 0.0
+  expl_intr_scale: 1.0
+  expl_opt: {opt: adam, lr: 3e-4, eps: 1e-5, clip: 100, wd: 1e-6}
+  expl_head: {layers: 4, units: 400, act: elu, dist: mse}
+  disag_target: stoch
+  disag_log: True
+  disag_models: 10
+  disag_offset: 1
+  disag_action_cond: True
+  expl_model_loss: kl
+
+  # Logging
+  logging:
+    project: iglu_dreamer
+    wdb: False
+    run_name: none
+    exp_name: none
+    env_name: none
+
+iglu:
+
+  task: iglu_C8
+  time_limit: 500
+  action_repeat: 1
+  steps: 5e5
+  eval_every: 1e4
+  log_every: 1e3
+  prefill: 30000
+  pretrain: 10000
+  grayscale: True
+  disable_decoder: False
+  encode_grid: False
+  train_every: 5
+  train_steps: 1
+  clip_rewards: identity
+  pred_discount: False
+  grad_heads: [image, reward, grid, position]
+  rssm: {hidden: 600, deter: 600, stoch: 32, discrete: 32}
+  actor.dist: onehot
+  model_opt.lr: 2e-4
+  actor_opt.lr: 4e-5
+  critic_opt.lr: 1e-4
+  actor_ent: 1e-3
+  discount: 0.99
+  actor_grad: reinforce
+  expl_noise: 0.01
+  actor_grad_mix: 0.5
+  loss_scales.kl: 0.1
+  loss_scales.discount: 5.0
+  .*\.wd$: 0.0
+
+debug:
+
+  jit: False
+  # time_limit: 100
+  eval_every: 300
+  log_every: 300
+  prefill: 100
+  pretrain: 1
+  train_steps: 1
+  dataset.batch: 12
+  dataset.length: 50
